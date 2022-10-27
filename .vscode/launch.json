@@ -1,0 +1,31 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'convmdblog'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=convmdblog",
+                    "--package=convmdblog"
+                ],
+                "filter": {
+                    "name": "convmdblog",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                // "/home/minghu6/coding/blog/blog-draft/normal-files",
+                // "/home/minghu6/coding/blog/myblog/_posts",
+                // "d",
+                // "j"
+            ],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}

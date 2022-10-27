@@ -1,0 +1,21 @@
+[package]
+name = "convmdblog"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+regex = "1"
+lazy_static = "1.4.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9"
+chrono = "0.4"
+serde_with = "2.0.1"
+clap = { version = "^3", features = ["derive"] }
+clap_complete = "3.1.1"
+shellexpand = "2.1"
+# either = "1.6.1"
+pathdiff = "0.2.1"
+pulldown-cmark-m6 = { git = "https://github.com/minghu6/pulldown-cmark.git" }
+lol_html = "0.3.1"

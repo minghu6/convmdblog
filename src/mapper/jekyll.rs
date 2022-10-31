@@ -6,6 +6,8 @@ use std::{
 
 use chrono::Datelike;
 use lazy_static::lazy_static;
+use lol_html::{rewrite_str, element, RewriteStrSettings, html_content::ContentType};
+use pulldown_cmark::{Parser, Options, Event, md::push_md, CowStr, Tag};
 use serde_yaml::{Mapping, Value};
 
 use super::{map_img_ref, Mapper};
@@ -132,7 +134,9 @@ fn map_default_to_jekyll(input: &Path, outdir: &Path) -> Result<()> {
     let reader = DefaultReader::from_path(input)?;
 
     /* Common mapping */
-    let text = map_img_ref(&reader.raw[reader.text_start..], "/assets/img")?;
+    let text = &reader.raw[reader.text_start..];
+    let text = map_img_ref(&text, "/assets/img")?;
+    let text = center_img(&text)?;
 
     /* Specify the file name*/
     let yaml_hdr;
@@ -212,6 +216,7 @@ fn map_default_to_jekyll(input: &Path, outdir: &Path) -> Result<()> {
     Ok(())
 }
 
+
 fn map_tags_to_cats<S: AsRef<str>>(tags: &[S]) -> Vec<Cat> {
     let mut catopt = None;
 
@@ -230,4 +235,66 @@ fn map_tags_to_cats<S: AsRef<str>>(tags: &[S]) -> Vec<Cat> {
     }
 
     vec![catopt.unwrap_or_default()]
+}
+
+
+fn center_img(text: &str) -> Result<String> {
+
+    let parser = Parser::new_ext(text, Options::all());
+
+    let parser = parser.map(|event| match event {
+        Event::Html(tag) => {
+            let handler_img = element!("img[src]", |img| {
+
+                img.before("<div class=\"sx-center\">", ContentType::Html);
+                img.after("</div>", ContentType::Html);
+
+                Ok(())
+            });
+
+            Event::Html(CowStr::Boxed(
+                rewrite_str(
+                    &tag,
+                    RewriteStrSettings {
+                        element_content_handlers: vec![handler_img],
+                        ..Default::default()
+                    },
+                )
+                .unwrap()
+                .into_boxed_str(),
+            ))
+        }
+        Event::Start(tag) => {
+            match tag {
+                Tag::Image(_link_type, url, title) => {
+                    if !url.is_empty() {
+                        Event::Html(CowStr::Boxed(format!(
+                            "<div class=\"sx-center\"><img src=\"{url}\" title=\"{title}\"></div>"
+                        ).into_boxed_str()))
+                    }
+                    else {
+                        Event::Start(Tag::Image(_link_type, url, title))
+                    }
+                },
+                x => Event::Start(x)
+            }
+        },
+        Event::End(tag) => match tag {
+            Tag::Image(_link_type, url, _title) => {
+                if !url.is_empty() {
+                    Event::Text(CowStr::Boxed(format!("").into_boxed_str()))
+                }
+                else {
+                    Event::End(Tag::Image(_link_type, url, _title))
+                }
+            },
+            x => Event::End(x)
+        },
+        e => e,
+    });
+
+    let mut cache = String::new();
+    push_md(parser, &mut cache).unwrap();
+
+    Ok(cache)
 }
